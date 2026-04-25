@@ -1,5 +1,11 @@
 # Arch + Hyprland Setup SOP
 
+Repo URL:
+
+```text
+https://github.com/weihen9/arch-set-up-.git
+```
+
 This SOP is for installing Arch Linux on an empty drive, then applying this Hyprland setup repo.
 
 Target setup:
@@ -19,7 +25,46 @@ Package manager: pacman + AUR helper
 
 ---
 
-# 1. Prepare the USB
+# 1. Download the Arch ISO
+
+Go to the official Arch Linux download page:
+
+```text
+https://archlinux.org/download/
+```
+
+Download the latest installer ISO file named:
+
+```text
+archlinux-x86_64.iso
+```
+
+Use the **HTTP Direct Downloads** section.
+
+Steps:
+
+1. Scroll to **HTTP Direct Downloads**.
+2. Choose a nearby mirror.
+3. Download `archlinux-x86_64.iso`.
+
+Do **not** download these as your installer:
+
+```text
+archlinux-bootstrap-x86_64.tar.zst
+archlinux-x86_64.iso.sig
+sha256sums.txt
+b2sums.txt
+```
+
+The `.sig` and checksum files are only for verification. The file needed for the installer USB is:
+
+```text
+archlinux-x86_64.iso
+```
+
+---
+
+# 2. Prepare the USB
 
 ## Option A: Ventoy
 
@@ -33,13 +78,13 @@ Ventoy USB
 
 ## Option B: Normal Arch USB
 
-Flash the official Arch ISO using Rufus, Balena Etcher, or another ISO flashing tool.
+Flash `archlinux-x86_64.iso` using Rufus, Balena Etcher, or another ISO flashing tool.
 
-Then clone this repo later from GitHub during the Arch live environment.
+If using this method, clone this GitHub repo later from inside the Arch live environment.
 
 ---
 
-# 2. Boot into the Arch USB
+# 3. Boot into the Arch USB
 
 Restart the PC and enter BIOS/UEFI.
 
@@ -53,7 +98,7 @@ Avoid legacy/non-UEFI boot options.
 
 ---
 
-# 3. Check UEFI mode
+# 4. Check UEFI mode
 
 Inside the Arch ISO, run:
 
@@ -65,7 +110,7 @@ If files appear, you are in UEFI mode.
 
 ---
 
-# 4. Connect to the internet
+# 5. Connect to the internet
 
 Check internet:
 
@@ -97,45 +142,19 @@ ping archlinux.org
 
 ---
 
-# 5. Get this repo inside the Arch live environment
+# 6. Clone this setup repo
 
-## Option A: Clone from GitHub
+Inside the Arch live environment:
 
 ```bash
 pacman -Sy --needed git
-git clone https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git ~/arch-setup
+git clone https://github.com/weihen9/arch-set-up-.git ~/arch-setup
 cd ~/arch-setup
-```
-
-## Option B: Unzip from USB
-
-Find the USB:
-
-```bash
-lsblk
-```
-
-Mount it:
-
-```bash
-mkdir -p /mnt/usb
-mount /dev/sdX1 /mnt/usb
-```
-
-Replace `sdX1` with the correct USB partition.
-
-Then unzip:
-
-```bash
-pacman -Sy --needed unzip
-cd /mnt/usb
-unzip YOUR_SETUP_ZIP_NAME.zip
-cd jason-arch-hyprland-setup
 ```
 
 ---
 
-# 6. Run preflight check
+# 7. Run preflight check
 
 From inside the repo folder:
 
@@ -155,7 +174,7 @@ Current mount layout
 
 ---
 
-# 7. Start Arch install
+# 8. Start Arch install
 
 Run:
 
@@ -171,7 +190,7 @@ archinstall
 
 ---
 
-# 8. Archinstall choices for an empty drive
+# 9. Archinstall choices for an empty drive
 
 Use these choices:
 
@@ -199,7 +218,7 @@ Only select the drive you actually want to install Arch on.
 
 ---
 
-# 9. If installing on a partitioned drive instead
+# 10. If installing on a partitioned drive instead
 
 Only follow this section if the drive already has Windows, data, or other partitions.
 
@@ -214,7 +233,7 @@ Instead:
 1. Use free/unallocated space.
 2. Do not format Windows/data partitions.
 3. Reuse the existing EFI partition if appropriate.
-4. Do not delete the Windows Boot Manager.
+4. Do not delete Windows Boot Manager.
 5. Check the disk layout carefully with:
 
 ```bash
@@ -233,7 +252,7 @@ If unsure, stop at the partitioning screen and verify before continuing.
 
 ---
 
-# 10. Copy repo into the new Arch install
+# 11. Copy repo into the new Arch install
 
 After `archinstall` finishes, but before rebooting:
 
@@ -257,7 +276,7 @@ Remove the USB when the system restarts.
 
 ---
 
-# 11. First boot into Arch
+# 12. First boot into Arch
 
 Log into your new Arch system.
 
@@ -270,7 +289,7 @@ chmod +x install.sh scripts/*.sh scripts/live/*.sh dotfiles/hypr/scripts/*.sh do
 
 ---
 
-# 12. Enable multilib
+# 13. Enable multilib
 
 Edit pacman config:
 
@@ -293,7 +312,7 @@ sudo pacman -Syu
 
 ---
 
-# 13. Run post-install setup
+# 14. Run post-install setup
 
 Most systems use `/boot` for EFI.
 
@@ -331,7 +350,7 @@ services
 
 ---
 
-# 14. Reboot
+# 15. Reboot
 
 After the script finishes:
 
@@ -341,7 +360,7 @@ reboot
 
 ---
 
-# 15. Check the system
+# 16. Check the system
 
 After rebooting, check NVIDIA:
 
@@ -375,24 +394,74 @@ systemctl status docker
 
 ---
 
-# 16. Main keybinds
+# 17. Main keybinds
 
 | Keybind | Action |
 |---|---|
 | `SUPER + SPACE` | Open rofi |
 | `SUPER + W` | Open wallpaper menu |
-| `SUPER + SHIFT + W` | Random wallpaper |
-| `SUPER + ENTER` | Open terminal |
+| `SUPER + Q` | Open terminal |
+| `SUPER + C` | Close active window |
 | `SUPER + E` | Open Yazi |
-| `SUPER + Q` | Close window |
+| `SUPER + M` | Exit Hyprland |
 | `SUPER + 1-9` | Switch workspace |
-| `SUPER + SHIFT + 1-9` | Move window to workspace |
+| `SUPER + SHIFT + 1-9` | Move active window to workspace |
 
 `SUPER` means the Windows key.
 
 ---
 
-# 17. Updating later
+# 18. Hyprland keybind config reference
+
+Make sure the actual Hyprland config matches the README.
+
+Use these binds:
+
+```ini
+bind = SUPER, SPACE, exec, rofi -show drun
+bind = SUPER, W, exec, ~/.config/hypr/scripts/wallpaper-menu.sh
+bind = SUPER, Q, exec, kitty
+bind = SUPER, C, killactive
+bind = SUPER, E, exec, kitty -e yazi
+bind = SUPER, M, exit
+```
+
+Remove or comment out these binds if they exist:
+
+```ini
+bind = SUPER SHIFT, W, exec, ~/.config/hypr/scripts/random-wallpaper.sh
+bind = SUPER, RETURN, exec, kitty
+bind = SUPER, ENTER, exec, kitty
+bind = SUPER, Q, killactive
+```
+
+Workspace binds should remain:
+
+```ini
+bind = SUPER, 1, workspace, 1
+bind = SUPER, 2, workspace, 2
+bind = SUPER, 3, workspace, 3
+bind = SUPER, 4, workspace, 4
+bind = SUPER, 5, workspace, 5
+bind = SUPER, 6, workspace, 6
+bind = SUPER, 7, workspace, 7
+bind = SUPER, 8, workspace, 8
+bind = SUPER, 9, workspace, 9
+
+bind = SUPER SHIFT, 1, movetoworkspace, 1
+bind = SUPER SHIFT, 2, movetoworkspace, 2
+bind = SUPER SHIFT, 3, movetoworkspace, 3
+bind = SUPER SHIFT, 4, movetoworkspace, 4
+bind = SUPER SHIFT, 5, movetoworkspace, 5
+bind = SUPER SHIFT, 6, movetoworkspace, 6
+bind = SUPER SHIFT, 7, movetoworkspace, 7
+bind = SUPER SHIFT, 8, movetoworkspace, 8
+bind = SUPER SHIFT, 9, movetoworkspace, 9
+```
+
+---
+
+# 19. Updating later
 
 Update official packages:
 
@@ -414,7 +483,7 @@ yay -Syu
 
 ---
 
-# 18. Saving future config changes
+# 20. Saving future config changes
 
 After changing configs, copy them back into the repo:
 
@@ -437,19 +506,22 @@ git push
 
 ---
 
-# 19. Short install flow
+# 21. Short install flow
 
 ```text
-1. Boot Arch ISO USB in UEFI mode
-2. Connect to internet
-3. Clone or unzip this repo
-4. Run 00-preflight.sh
-5. Run 01-run-archinstall-guided.sh
-6. Install Arch using archinstall
-7. Copy repo into new Arch install
-8. Reboot into Arch
-9. Enable multilib
-10. Run one-shot-postinstall.sh
-11. Reboot
-12. Use Hyprland
+1. Download archlinux-x86_64.iso from https://archlinux.org/download/
+2. Put the ISO on a USB using Ventoy, Rufus, or Balena Etcher
+3. Boot the USB in UEFI mode
+4. Connect to internet
+5. Clone this repo:
+   git clone https://github.com/weihen9/arch-set-up-.git ~/arch-setup
+6. Run 00-preflight.sh
+7. Run 01-run-archinstall-guided.sh
+8. Install Arch using archinstall
+9. Copy repo into new Arch install
+10. Reboot into Arch
+11. Enable multilib
+12. Run one-shot-postinstall.sh
+13. Reboot
+14. Use Hyprland
 ```
