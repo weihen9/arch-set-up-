@@ -1,0 +1,5 @@
+librewolf-bin
+visual-studio-code-bin
+vesktop-bin
+protonup-qt-bin
+qogir-icon-theme

@@ -1,0 +1,4 @@
+grub
+efibootmgr
+os-prober
+mtools

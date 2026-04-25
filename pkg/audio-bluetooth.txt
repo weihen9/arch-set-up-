@@ -1,0 +1,10 @@
+pipewire
+pipewire-pulse
+pipewire-alsa
+wireplumber
+bluez
+bluez-utils
+blueman
+pavucontrol
+pamixer
+playerctl

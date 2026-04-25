@@ -1,0 +1,6 @@
+[manager]
+prepend_keymap = [
+  { on = [ "g", "w" ], run = "cd ~/wallpaper", desc = "Go to wallpapers" },
+  { on = [ "g", "d" ], run = "cd ~/Downloads", desc = "Go to Downloads" },
+  { on = [ "g", "c" ], run = "cd ~/.config", desc = "Go to config" },
+]

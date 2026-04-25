@@ -1,0 +1,14 @@
+firefox
+fastfetch
+btop
+htop
+tree
+fd
+ripgrep
+fzf
+zoxide
+wget
+curl
+rsync
+openssh
+jq

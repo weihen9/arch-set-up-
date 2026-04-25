@@ -400,6 +400,7 @@ systemctl status docker
 |---|---|
 | `SUPER + SPACE` | Open rofi |
 | `SUPER + W` | Open wallpaper menu |
+| `SUPER + SHIFT + W` | Open theme menu |
 | `SUPER + Q` | Open terminal |
 | `SUPER + C` | Close active window |
 | `SUPER + E` | Open Yazi |
@@ -408,6 +409,8 @@ systemctl status docker
 | `SUPER + SHIFT + 1-9` | Move active window to workspace |
 
 `SUPER` means the Windows key.
+
+There is no random wallpaper keybind in this setup.
 
 ---
 
@@ -420,6 +423,7 @@ Use these binds:
 ```ini
 bind = SUPER, SPACE, exec, rofi -show drun
 bind = SUPER, W, exec, ~/.config/hypr/scripts/wallpaper-menu.sh
+bind = SUPER SHIFT, W, exec, ~/.config/hypr/scripts/theme-menu.sh
 bind = SUPER, Q, exec, kitty
 bind = SUPER, C, killactive
 bind = SUPER, E, exec, kitty -e yazi
@@ -461,7 +465,69 @@ bind = SUPER SHIFT, 9, movetoworkspace, 9
 
 ---
 
-# 19. Updating later
+# 19. Wallpaper and theme flow
+
+Put wallpapers in:
+
+```bash
+~/wallpaper
+```
+
+Use:
+
+```text
+SUPER + W
+```
+
+to open the wallpaper menu.
+
+Use:
+
+```text
+SUPER + SHIFT + W
+```
+
+to open the theme menu.
+
+The wallpaper script:
+
+1. Opens rofi.
+2. Sets the selected wallpaper with `awww`.
+3. Generates colors with `pywal`.
+4. Reloads Waybar.
+5. Saves the selected wallpaper as the current wallpaper.
+
+---
+
+# 20. External Waybar source
+
+Confirmed Waybar source:
+
+```text
+https://github.com/elifouts/Dotfiles
+```
+
+Relevant folder:
+
+```text
+https://github.com/elifouts/Dotfiles/tree/main/.config/waybar
+```
+
+Sync Waybar assets/themes/scripts with:
+
+```bash
+./scripts/sync-elifouts-waybar.sh
+```
+
+Sync wallpapers with:
+
+```bash
+./scripts/sync-elifouts-wallpapers.sh
+```
+
+---
+
+# 21. Updating later
 
 Update official packages:
 
@@ -483,7 +549,7 @@ yay -Syu
 
 ---
 
-# 20. Saving future config changes
+# 22. Saving future config changes
 
 After changing configs, copy them back into the repo:
 
@@ -506,7 +572,7 @@ git push
 
 ---
 
-# 21. Short install flow
+# 23. Short install flow
 
 ```text
 1. Download archlinux-x86_64.iso from https://archlinux.org/download/

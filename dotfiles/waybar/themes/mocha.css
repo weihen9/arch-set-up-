@@ -1,0 +1,9 @@
+@define-color background #1e1e2e; @define-color foreground #cdd6f4; @define-color muted #6c7086; @define-color accent #89b4fa; @define-color accent2 #cba6f7; @define-color surface #313244;
+* { border: none; border-radius: 0; font-family: "JetBrainsMono Nerd Font", "Noto Sans", sans-serif; font-size: 13px; min-height: 0; }
+window#waybar { background: alpha(@background, 0.82); color: @foreground; border-bottom: 1px solid alpha(@surface, 0.7); }
+#workspaces, #window, #clock, #custom-wallpaper, #pulseaudio, #network, #bluetooth, #tray { margin: 5px 4px; padding: 0 10px; background: alpha(@surface, 0.72); border-radius: 16px; }
+#workspaces { margin-left: 8px; padding: 0 6px; }
+#workspaces button { padding: 0 9px; margin: 4px 2px; color: @foreground; background: transparent; border-radius: 999px; }
+#workspaces button.active { color: @background; background: @accent; }
+#clock { color: @accent2; font-weight: 700; }
+#pulseaudio.muted, #network.disconnected, #bluetooth.disabled { color: @muted; }
