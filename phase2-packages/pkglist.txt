@@ -1,0 +1,103 @@
+# =============================================================================
+# pkglist.txt — Core system packages (Phase 2)
+# Lines starting with # are comments. Blank lines are ignored.
+# Format: package_name   # optional comment
+# =============================================================================
+
+# ── CPU (AMD) ─────────────────────────────────────────────────────────────────
+amd-ucode             # AMD microcode updates (security + stability)
+
+# ── GPU / Graphics ───────────────────────────────────────────────────────────
+mesa                  # Open source GPU drivers (needed even with NVIDIA for Vulkan)
+vulkan-icd-loader     # Vulkan loader
+lib32-mesa            # 32-bit mesa (games/wine)
+xorg-xwayland         # XWayland for running legacy X11 apps under Wayland
+
+# ── Display / Wayland ─────────────────────────────────────────────────────────
+wayland               # Core Wayland library
+wayland-protocols     # Wayland protocol extensions
+wlroots               # Wayland compositor library (Hyprland dep)
+polkit                # Privilege escalation for GUI apps
+polkit-kde-agent      # Polkit authentication agent (works with Hyprland)
+xdg-desktop-portal    # Desktop integration (screenshare, file pickers)
+xdg-desktop-portal-hyprland  # Hyprland-specific portal
+qt5-wayland           # Qt5 Wayland support
+qt6-wayland           # Qt6 Wayland support
+glfw-wayland          # GLFW for Wayland
+
+# ── Network ───────────────────────────────────────────────────────────────────
+networkmanager        # Network management
+nm-connection-editor  # GUI editor for network connections
+network-manager-applet # Tray icon for NetworkManager
+
+# ── Bluetooth ─────────────────────────────────────────────────────────────────
+bluez                 # Bluetooth protocol stack
+bluez-utils           # Command-line Bluetooth tools (bluetoothctl)
+blueman               # Bluetooth GUI manager
+
+# ── Audio ─────────────────────────────────────────────────────────────────────
+pipewire              # Modern audio/video server
+pipewire-alsa         # ALSA compatibility
+pipewire-pulse        # PulseAudio compatibility
+wireplumber           # Session manager for PipeWire
+pavucontrol           # Volume control GUI
+
+# ── Fonts ─────────────────────────────────────────────────────────────────────
+noto-fonts            # Google Noto fonts (wide Unicode coverage)
+noto-fonts-emoji      # Emoji support
+ttf-jetbrains-mono-nerd  # JetBrains Mono with Nerd Font icons (terminal)
+ttf-font-awesome      # Font Awesome icons (used by Waybar)
+otf-font-awesome      # Font Awesome OTF variant
+
+# ── System utilities ──────────────────────────────────────────────────────────
+htop                  # Process monitor
+fastfetch             # System info display (neofetch replacement)
+man-db                # Manual pages
+man-pages             # Linux man pages
+less                  # Pager
+tree                  # Directory tree viewer
+jq                    # JSON processor (used by scripts + Waybar)
+bc                    # Calculator (used by some Waybar modules)
+upower                # Power management info (battery for laptop)
+brightnessctl         # Brightness control (laptop)
+
+# ── File management ───────────────────────────────────────────────────────────
+gvfs                  # Virtual filesystem (trash, USB mounting etc.)
+udisks2               # Disk management daemon
+udiskie               # Auto-mount removable media
+thunar                # Lightweight file manager (GUI fallback)
+p7zip                 # 7zip support
+unzip                 # Zip extraction
+zip                   # Zip creation
+
+# ── Theming ───────────────────────────────────────────────────────────────────
+gtk3                  # GTK3 toolkit
+gtk4                  # GTK4 toolkit
+nwg-look              # GTK theme switcher for Wayland
+
+# ── Clipboard ─────────────────────────────────────────────────────────────────
+wl-clipboard          # Wayland clipboard (wl-copy / wl-paste)
+cliphist              # Clipboard history manager
+
+# ── Screenshots / Screen recording ───────────────────────────────────────────
+grim                  # Wayland screenshot tool
+slurp                 # Region selection for grim
+swappy                # Screenshot annotation tool
+
+# ── Notifications ─────────────────────────────────────────────────────────────
+dunst                 # Lightweight notification daemon
+libnotify             # Desktop notification library
+
+# ── Lock screen ───────────────────────────────────────────────────────────────
+swaylock              # Wayland lock screen
+swayidle              # Idle management (auto-lock, screen off)
+
+# ── Wallpaper ─────────────────────────────────────────────────────────────────
+swww                  # Animated wallpaper daemon for Wayland
+
+# ── Development tools ─────────────────────────────────────────────────────────
+git                   # Version control
+make                  # Build tool
+cmake                 # Build system
+python                # Python interpreter
+python-pip            # Python package manager

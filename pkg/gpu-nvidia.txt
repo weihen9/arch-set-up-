@@ -1,8 +1,0 @@
-nvidia
-nvidia-utils
-lib32-nvidia-utils
-nvidia-settings
-opencl-nvidia
-lib32-opencl-nvidia
-vulkan-tools
-mesa

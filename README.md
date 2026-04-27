@@ -1,593 +1,524 @@
-# Arch + Hyprland Setup SOP
+# Arch Linux Setup — SOP
 
-Repo URL:
+Personal Arch setup for AMD CPU + NVIDIA RTX 2070 Super.
+Stack: Hyprland · Waybar · Rofi · Kitty · Yazi · Firefox · LibreWolf.
 
-```text
-https://github.com/weihen9/arch-set-up-.git
+> **"awww" = Hyprland** in this repo. If you meant a different compositor, swap `hyprland` in phase3 and phase4 configs.
+
+---
+
+## Hardware Context
+
+| Component | Spec | Notes |
+|-----------|------|-------|
+| CPU | AMD | `amd-ucode` + `vulkan-radeon` + `mesa` |
+| GPU | NVIDIA RTX 2070 Super (Turing) | `nvidia-open` — no AUR fallback needed |
+| Drive 1 | Arch SSD | Install target |
+| Drive 2 | Windows SSD | Separate drive, no interference |
+
+---
+
+## Repo Structure
+
 ```
-
-This SOP is for installing Arch Linux on an empty drive, then applying this Hyprland setup repo.
-
-Target setup:
-
-```text
-CPU: AMD
-GPU: NVIDIA
-Desktop: Hyprland
-Bar: Waybar
-Launcher: rofi
-Wallpaper: awww
-File manager: Yazi
-Browsers: Firefox + LibreWolf
-Bootloader: GRUB
-Package manager: pacman + AUR helper
+arch-setup/
+├── README.md                        ← you are here (full SOP)
+├── scripts/helpers.sh               ← shared functions for all phase scripts
+├── phase0-base/bootstrap.sh
+├── phase1-drivers/
+│   ├── nvidia.sh
+│   └── hooks/nvidia.hook
+├── phase2-packages/
+│   ├── packages.sh
+│   └── pkglist.txt
+├── phase3-desktop/desktop.sh
+├── phase4-dotfiles/
+│   ├── dots.sh
+│   └── configs/                     ← your config files live here
+│       ├── hyprland/
+│       ├── waybar/                  ← populated from elifouts/Dotfiles by dots.sh
+│       ├── rofi/
+│       ├── kitty/
+│       └── yazi/
+└── phase5-tests/
+    ├── pre-reboot.sh
+    └── post-reboot.sh
 ```
 
 ---
 
-# 1. Download the Arch ISO
+## Quick Reference — Run Order
 
-Go to the official Arch Linux download page:
-
-```text
-https://archlinux.org/download/
 ```
-
-Download the latest installer ISO file named:
-
-```text
-archlinux-x86_64.iso
-```
-
-Use the **HTTP Direct Downloads** section.
-
-Steps:
-
-1. Scroll to **HTTP Direct Downloads**.
-2. Choose a nearby mirror.
-3. Download `archlinux-x86_64.iso`.
-
-Do **not** download these as your installer:
-
-```text
-archlinux-bootstrap-x86_64.tar.zst
-archlinux-x86_64.iso.sig
-sha256sums.txt
-b2sums.txt
-```
-
-The `.sig` and checksum files are only for verification. The file needed for the installer USB is:
-
-```text
-archlinux-x86_64.iso
+1.  Install Arch (see Pre-Install below)
+2.  First login → git clone this repo
+3.  bash phase0-base/bootstrap.sh
+4.  REBOOT
+5.  bash phase1-drivers/nvidia.sh
+6.  REBOOT → verify: nvidia-smi
+7.  bash phase2-packages/packages.sh
+8.  bash phase3-desktop/desktop.sh
+9.  bash phase4-dotfiles/dots.sh
+10. bash phase5-tests/pre-reboot.sh   ← all must pass
+11. REBOOT
+12. bash phase5-tests/post-reboot.sh  ← all must pass
 ```
 
 ---
 
-# 2. Prepare the USB
+## Pre-Install
 
-## Option A: Ventoy
+### BIOS Settings (do this before booting the USB)
 
-Put these files on the Ventoy USB:
+1. Enter BIOS (usually `DEL` or `F2` on boot)
+2. **Disable Secure Boot** — NVIDIA open modules won't load with Secure Boot on
+3. **Disable CSM / Legacy Boot** — use UEFI only
+4. **Boot order**: set your Arch USB as first boot device
+5. **Optional but recommended**: physically unplug the Windows SSD during Arch installation to eliminate any risk of accidentally overwriting it. Plug it back in after Arch is fully installed.
+6. **XMP/EXPO**: enable if you want your RAM running at its rated speed (separate from Arch install, just good practice)
 
-```text
-Ventoy USB
-├── archlinux-x86_64.iso
-└── this setup repo zip
+### Windows SSD Note
+
+Since Windows is on a completely separate SSD, it won't interfere with Arch at all. After your Arch setup is complete:
+
+1. Plug the Windows SSD back in (if you unplugged it)
+2. Enter BIOS → set Arch SSD as primary boot device
+3. Windows will still be bootable — select it in BIOS boot menu when needed
+4. GRUB will not automatically detect Windows unless you install `os-prober` and re-run `grub-mkconfig` — that's optional
+
+### Partitioning Recommendation
+
+For a clean UEFI Arch install on the Arch SSD:
+
+| Partition | Size | Type | Mount |
+|-----------|------|------|-------|
+| EFI | 512MB–1GB | EFI System | `/boot` |
+| Swap | 16GB (match your RAM) | Linux swap | swap |
+| Root | Remaining | Linux filesystem | `/` |
+
+Use `fdisk` or `cfdisk` to partition. Format as:
+```bash
+mkfs.fat -F32 /dev/sdXn      # EFI partition
+mkswap /dev/sdXn              # swap
+mkfs.ext4 /dev/sdXn          # root (or btrfs if you prefer snapshots)
 ```
-
-## Option B: Normal Arch USB
-
-Flash `archlinux-x86_64.iso` using Rufus, Balena Etcher, or another ISO flashing tool.
-
-If using this method, clone this GitHub repo later from inside the Arch live environment.
 
 ---
 
-# 3. Boot into the Arch USB
+## Phase 0 — Bootstrap
 
-Restart the PC and enter BIOS/UEFI.
+**What it does**: updates the system, installs core tools, enables multilib, sets up fastest mirrors, installs `paru` AUR helper.
 
-Select the USB boot option that starts with:
-
-```text
-UEFI:
-```
-
-Avoid legacy/non-UEFI boot options.
-
----
-
-# 4. Check UEFI mode
-
-Inside the Arch ISO, run:
+**Run after**: first login to a fresh Arch install (no desktop yet, just a terminal).
 
 ```bash
-ls /sys/firmware/efi/efivars
-```
-
-If files appear, you are in UEFI mode.
-
----
-
-# 5. Connect to the internet
-
-Check internet:
-
-```bash
-ping archlinux.org
-```
-
-If using Wi-Fi:
-
-```bash
-iwctl
-```
-
-Then inside `iwctl`:
-
-```text
-device list
-station wlan0 scan
-station wlan0 get-networks
-station wlan0 connect YOUR_WIFI_NAME
-exit
-```
-
-Test again:
-
-```bash
-ping archlinux.org
-```
-
----
-
-# 6. Clone this setup repo
-
-Inside the Arch live environment:
-
-```bash
-pacman -Sy --needed git
 git clone https://github.com/weihen9/arch-set-up-.git ~/arch-setup
 cd ~/arch-setup
+bash phase0-base/bootstrap.sh
 ```
+
+**Then reboot.**
+
+> The reboot ensures your new sudo session, multilib, and mirrorlist are all active before the next phase.
 
 ---
 
-# 7. Run preflight check
+## Phase 1 — NVIDIA Drivers
 
-From inside the repo folder:
+**What it does**:
+- Detects your GPU via `lspci`
+- Installs `linux-headers`, `nvidia-open`, `nvidia-utils`, `lib32-nvidia-utils`
+- Blacklists `nouveau`
+- Adds NVIDIA modules to `mkinitcpio` for early KMS loading
+- Sets `nvidia-drm.modeset=1 nvidia-drm.fbdev=1` in GRUB
+- Regenerates `grub.cfg` and `initramfs`
+- Installs the `nvidia.hook` pacman hook (auto-regenerates initramfs on every driver or kernel update)
+- Verifies with `nvidia-smi`
 
-```bash
-chmod +x scripts/live/*.sh
-./scripts/live/00-preflight.sh
-```
-
-This checks:
-
-```text
-UEFI mode
-Internet connection
-Available drives
-Current mount layout
-```
-
----
-
-# 8. Start Arch install
-
-Run:
+**Why isolated**: If NVIDIA fails, nothing downstream works. Running this alone lets you debug it without touching anything else.
 
 ```bash
-./scripts/live/01-run-archinstall-guided.sh
+bash phase1-drivers/nvidia.sh
 ```
 
-This launches:
+**Then reboot.**
 
-```bash
-archinstall
-```
-
----
-
-# 9. Archinstall choices for an empty drive
-
-Use these choices:
-
-| Setting | Choice |
-|---|---|
-| Boot mode | UEFI |
-| Disk setup | Use entire empty drive |
-| Filesystem | ext4 or btrfs |
-| Bootloader | GRUB |
-| Kernel | linux |
-| CPU microcode | AMD |
-| Audio | PipeWire |
-| Network | NetworkManager |
-| Profile | Minimal / no desktop |
-| User account | Create normal user with sudo |
-| Swap | zram or swapfile |
-
-For an empty drive, it is okay to use:
-
-```text
-Wipe selected drive
-```
-
-Only select the drive you actually want to install Arch on.
-
----
-
-# 10. If installing on a partitioned drive instead
-
-Only follow this section if the drive already has Windows, data, or other partitions.
-
-Do **not** choose:
-
-```text
-Wipe entire disk
-```
-
-Instead:
-
-1. Use free/unallocated space.
-2. Do not format Windows/data partitions.
-3. Reuse the existing EFI partition if appropriate.
-4. Do not delete Windows Boot Manager.
-5. Check the disk layout carefully with:
-
-```bash
-lsblk -f
-```
-
-Look for:
-
-```text
-EFI System Partition
-Windows NTFS partition
-Free/unallocated space for Arch
-```
-
-If unsure, stop at the partitioning screen and verify before continuing.
-
----
-
-# 11. Copy repo into the new Arch install
-
-After `archinstall` finishes, but before rebooting:
-
-```bash
-./scripts/live/02-copy-repo-to-new-arch.sh YOUR_USERNAME
-```
-
-Example:
-
-```bash
-./scripts/live/02-copy-repo-to-new-arch.sh jason
-```
-
-Then reboot:
-
-```bash
-reboot
-```
-
-Remove the USB when the system restarts.
-
----
-
-# 12. First boot into Arch
-
-Log into your new Arch system.
-
-Go to the setup repo:
-
-```bash
-cd ~/arch-setup
-chmod +x install.sh scripts/*.sh scripts/live/*.sh dotfiles/hypr/scripts/*.sh dotfiles/waybar/scripts/*.sh
-```
-
----
-
-# 13. Enable multilib
-
-Edit pacman config:
-
-```bash
-sudo nano /etc/pacman.conf
-```
-
-Uncomment:
-
-```ini
-[multilib]
-Include = /etc/pacman.d/mirrorlist
-```
-
-Update:
-
-```bash
-sudo pacman -Syu
-```
-
----
-
-# 14. Run post-install setup
-
-Most systems use `/boot` for EFI.
-
-Run:
-
-```bash
-./scripts/one-shot-postinstall.sh --efi /boot --tty-autostart
-```
-
-If your EFI partition is mounted at `/efi`, run:
-
-```bash
-./scripts/one-shot-postinstall.sh --efi /efi --tty-autostart
-```
-
-This installs and configures:
-
-```text
-Hyprland
-Waybar
-rofi
-awww
-Yazi
-Firefox
-LibreWolf
-NVIDIA drivers
-Steam/gaming tools
-PipeWire audio
-Bluetooth
-NetworkManager
-GRUB
-dotfiles
-services
-```
-
----
-
-# 15. Reboot
-
-After the script finishes:
-
-```bash
-reboot
-```
-
----
-
-# 16. Check the system
-
-After rebooting, check NVIDIA:
-
+After reboot, verify before continuing:
 ```bash
 nvidia-smi
 ```
 
-Check internet:
+You should see your GPU listed with driver version. If not, **stop here and see NVIDIA Troubleshooting** below before running Phase 2.
+
+### Why RTX 2070 Super Uses `nvidia-open`
+
+The RTX 2070 Super is Turing architecture (RTX 20xx). As of driver version 590+, Arch Linux uses the open kernel module (`nvidia-open`) by default for all Turing and newer GPUs. This is NVIDIA's official open-source kernel module — not Nouveau. It's stable, Wayland-compatible, and auto-updates with `pacman -Syu`.
+
+---
+
+## Phase 2 — Core Packages
+
+**What it does**: installs all system packages from `pkglist.txt` — network, Bluetooth, audio, fonts, utilities, Wayland deps, AMD/NVIDIA runtime libs.
+
+**Requires**: Phase 1 complete + `nvidia-smi` passing after reboot.
 
 ```bash
-ping archlinux.org
+bash phase2-packages/packages.sh
 ```
 
-Check Bluetooth:
+Notable packages and why they're included:
+
+- `amd-ucode` — AMD microcode security updates (load at boot via GRUB)
+- `pipewire` + `wireplumber` — modern audio stack, replaces PulseAudio
+- `xdg-desktop-portal-hyprland` — enables screensharing, file pickers in Hyprland
+- `wl-clipboard` — clipboard for Wayland (`wl-copy` / `wl-paste`)
+- `grim` + `slurp` — screenshot tools for Wayland
+- `swww` — animated wallpaper daemon
+- `brightnessctl` — screen brightness control (useful for laptops)
+- `udiskie` — auto-mounts USB drives
+
+To add or remove packages: edit `phase2-packages/pkglist.txt` before running the script.
+
+---
+
+## Phase 3 — Desktop Environment
+
+**What it does**: installs Hyprland, Waybar, Rofi (Wayland), Kitty, Yazi, Firefox, LibreWolf, Dunst.
 
 ```bash
-systemctl status bluetooth
+bash phase3-desktop/desktop.sh
 ```
 
-Check NetworkManager:
+### Key decisions
+
+**Rofi**: installs `rofi-wayland` from AUR, NOT the official `rofi` package (which is X11-only). If you have `rofi` already installed, the script removes it first. Using the wrong rofi is the main cause of theming failures on Wayland.
+
+**Waybar**: the script kills any running `waybar` process before install to prevent the double-instance bug. A second Waybar instance appears when it's launched both by Hyprland's `exec-once` and by the install script simultaneously.
+
+**LibreWolf**: installed as `librewolf-bin` from AUR (prebuilt binary, faster than building from source).
+
+---
+
+## Phase 4 — Dotfiles
+
+**What it does**:
+1. Pulls Waybar configs from [elifouts/Dotfiles](https://github.com/elifouts/Dotfiles) as a base
+2. Symlinks all configs from `phase4-dotfiles/configs/` into `~/.config/`
+3. Generates sensible defaults for anything not already in your configs dir
+4. Validates Waybar JSON config
 
 ```bash
-systemctl status NetworkManager
+bash phase4-dotfiles/dots.sh
 ```
 
-Check Docker, if installed:
+### Configs deployed
+
+| App | Source | Target |
+|-----|--------|--------|
+| Hyprland | `configs/hyprland/` | `~/.config/hypr/` |
+| Waybar | `configs/waybar/` (+ elifouts base) | `~/.config/waybar/` |
+| Rofi | `configs/rofi/` | `~/.config/rofi/` |
+| Kitty | `configs/kitty/` | `~/.config/kitty/` |
+| Yazi | `configs/yazi/` | `~/.config/yazi/` |
+
+All deployed as **symlinks** — so `git pull` in this repo instantly updates your live configs.
+
+### Customising configs
+
+Edit files in `phase4-dotfiles/configs/` — **not** in `~/.config/` directly (those are just symlinks). Commit your changes to this repo to preserve them.
+
+To update Waybar from elifouts upstream:
+```bash
+# Re-run dots.sh — it re-clones elifouts and overlays your changes
+bash phase4-dotfiles/dots.sh
+```
+
+### Fixing the double Waybar issue
+
+The double Waybar (one working + one showing errors on top of it) is caused by Waybar being launched twice: once from `hyprland.conf` (`exec-once = waybar`) and once from somewhere else (a previous autostart, a leftover process, or the script itself). Fix:
 
 ```bash
-systemctl status docker
+pkill waybar          # kill all instances
+# wait 2 seconds
+waybar &              # start exactly one
+```
+
+Then check your `~/.config/hypr/hyprland.conf` — it should have `exec-once = waybar` exactly once. The phase4 script does `pkill waybar` before deploying to prevent this.
+
+### NVIDIA-specific Hyprland env vars
+
+The generated Hyprland config includes these — they're required for Wayland to work properly on NVIDIA:
+
+```ini
+env = LIBVA_DRIVER_NAME,nvidia
+env = XDG_SESSION_TYPE,wayland
+env = GBM_BACKEND,nvidia-drm
+env = __GLX_VENDOR_LIBRARY_NAME,nvidia
+env = WLR_NO_HARDWARE_CURSORS,1
+```
+
+Do not remove these. `WLR_NO_HARDWARE_CURSORS,1` specifically prevents the invisible cursor bug that affects most NVIDIA Wayland setups.
+
+---
+
+## Phase 5 — Tests
+
+### Pre-reboot (run before final reboot)
+
+```bash
+bash phase5-tests/pre-reboot.sh
+```
+
+Checks: NVIDIA modules loaded, kernel params set, pacman hook installed, all key packages present, services enabled, config files exist.
+
+**All checks must pass before rebooting.**
+
+### Post-reboot (run after final reboot, inside Hyprland session)
+
+```bash
+bash phase5-tests/post-reboot.sh
+```
+
+Checks: `nvidia-smi`, Wayland session active, waybar running (exactly one instance), no duplicate processes, network up, audio running, all apps in PATH.
+
+---
+
+## BIOS Boot Order (after full install)
+
+1. Enter BIOS
+2. Set the **Arch SSD as the primary boot device**
+3. GRUB will load — boots Arch by default
+4. To boot Windows: enter BIOS boot menu at startup (usually `F12`) → select Windows SSD directly
+5. Optional: add Windows to GRUB menu:
+```bash
+sudo pacman -S os-prober
+sudo os-prober                                          # should detect Windows
+sudo grub-mkconfig -o /boot/grub/grub.cfg               # regenerate with Windows entry
 ```
 
 ---
 
-# 17. Main keybinds
+## Keybindings (default Hyprland config)
 
-| Keybind | Action |
-|---|---|
-| `SUPER + SPACE` | Open rofi |
-| `SUPER + W` | Open wallpaper menu |
-| `SUPER + SHIFT + W` | Open theme menu |
-| `SUPER + Q` | Open terminal |
+| Keys | Action |
+|------|--------|
+| `SUPER + Q` | Open Kitty terminal |
+| `SUPER + R` | Open Rofi app launcher |
+| `SUPER + E` | Open Yazi file manager |
 | `SUPER + C` | Close active window |
-| `SUPER + E` | Open Yazi |
 | `SUPER + M` | Exit Hyprland |
-| `SUPER + 1-9` | Switch workspace |
-| `SUPER + SHIFT + 1-9` | Move active window to workspace |
-
-`SUPER` means the Windows key.
-
-There is no random wallpaper keybind in this setup.
+| `SUPER + arrows` | Move focus |
+| `SUPER + SHIFT + arrows` | Move window |
+| `SUPER + 1–5` | Switch workspace |
+| `SUPER + SHIFT + 1–5` | Move window to workspace |
+| `Print Screen` | Screenshot region (copies to clipboard) |
 
 ---
 
-# 18. Hyprland keybind config reference
+## Troubleshooting
 
-Make sure the actual Hyprland config matches the README.
+### NVIDIA: black screen after Phase 1 reboot
 
-Use these binds:
+Boot from your Arch live USB. Chroot back in:
+```bash
+# Mount your partitions (adjust /dev/sdX to your actual drive)
+mount /dev/sdXn /mnt          # root partition
+mount /dev/sdXn /mnt/boot     # EFI partition
+arch-chroot /mnt
 
+# Check what went wrong
+cat /etc/mkinitcpio.conf      # MODULES should contain nvidia nvidia_modeset nvidia_uvm nvidia_drm
+cat /etc/default/grub         # GRUB_CMDLINE_LINUX_DEFAULT should contain nvidia-drm.modeset=1
+
+# Regenerate if needed
+mkinitcpio -P
+grub-mkconfig -o /boot/grub/grub.cfg
+exit
+reboot
+```
+
+### NVIDIA: `nvidia-smi` fails with "couldn't communicate with NVIDIA driver"
+
+```bash
+# Check if module is loaded
+lsmod | grep nvidia
+
+# Try loading manually
+sudo modprobe nvidia
+
+# If it fails, check dmesg for the reason
+dmesg | grep -i nvidia | tail -20
+
+# Most common fix: headers mismatch — reinstall headers matching your running kernel
+uname -r                      # note your kernel version
+sudo pacman -S linux-headers  # or linux-lts-headers if on lts kernel
+sudo mkinitcpio -P
+reboot
+```
+
+### NVIDIA: using DKMS (if standard nvidia-open fails)
+
+If you have a custom or LTS kernel, use DKMS instead:
+```bash
+sudo pacman -Rns nvidia-open
+sudo pacman -S nvidia-open-dkms linux-headers
+sudo mkinitcpio -P
+```
+
+Update `phase1-drivers/hooks/nvidia.hook` — change `Target=nvidia-open` to `Target=nvidia-open-dkms`.
+
+### Double Waybar instance
+
+```bash
+pkill waybar
+sleep 1
+waybar &
+```
+
+Check `~/.config/hypr/hyprland.conf` for duplicate `exec-once = waybar` lines — keep exactly one.
+
+### Waybar showing errors / not loading theme
+
+```bash
+# Test config manually
+waybar --config ~/.config/waybar/config --log-level debug
+
+# Common issue: JSON syntax error in config
+# Use a linter
+cat ~/.config/waybar/config | jq .
+
+# Common issue: using 'rofi' instead of 'rofi-wayland'
+pacman -Q rofi-wayland       # should be installed
+```
+
+### Rofi not opening or wrong theme
+
+```bash
+# Test rofi directly
+rofi -show drun -log /tmp/rofi.log
+cat /tmp/rofi.log
+
+# If using X11 rofi by mistake
+pacman -Q rofi               # if this exists, remove it
+sudo pacman -Rns rofi
+paru -S rofi-wayland
+
+# Theme not applying
+rofi -show drun -theme ~/.config/rofi/theme.rasi
+```
+
+### Cursor invisible in Hyprland
+
+Add to `~/.config/hypr/hyprland.conf`:
 ```ini
-bind = SUPER, SPACE, exec, rofi -show drun
-bind = SUPER, W, exec, ~/.config/hypr/scripts/wallpaper-menu.sh
-bind = SUPER SHIFT, W, exec, ~/.config/hypr/scripts/theme-menu.sh
-bind = SUPER, Q, exec, kitty
-bind = SUPER, C, killactive
-bind = SUPER, E, exec, kitty -e yazi
-bind = SUPER, M, exit
+env = WLR_NO_HARDWARE_CURSORS,1
 ```
+The generated config already includes this, but if you edited it out, that's likely the cause.
 
-Remove or comment out these binds if they exist:
+### Screen tearing in apps
 
+Add to `~/.config/hypr/hyprland.conf`:
 ```ini
-bind = SUPER SHIFT, W, exec, ~/.config/hypr/scripts/random-wallpaper.sh
-bind = SUPER, RETURN, exec, kitty
-bind = SUPER, ENTER, exec, kitty
-bind = SUPER, Q, killactive
+env = __GL_GSYNC_ALLOWED,0
+env = __GL_VRR_ALLOWED,0
 ```
 
-Workspace binds should remain:
+### Screensharing not working (Discord, browser)
 
-```ini
-bind = SUPER, 1, workspace, 1
-bind = SUPER, 2, workspace, 2
-bind = SUPER, 3, workspace, 3
-bind = SUPER, 4, workspace, 4
-bind = SUPER, 5, workspace, 5
-bind = SUPER, 6, workspace, 6
-bind = SUPER, 7, workspace, 7
-bind = SUPER, 8, workspace, 8
-bind = SUPER, 9, workspace, 9
+Ensure `xdg-desktop-portal-hyprland` is installed and running:
+```bash
+pacman -Q xdg-desktop-portal-hyprland
+systemctl --user status xdg-desktop-portal-hyprland
+# Start if not running:
+systemctl --user start xdg-desktop-portal-hyprland
+# Enable on login:
+systemctl --user enable xdg-desktop-portal-hyprland
+```
 
-bind = SUPER SHIFT, 1, movetoworkspace, 1
-bind = SUPER SHIFT, 2, movetoworkspace, 2
-bind = SUPER SHIFT, 3, movetoworkspace, 3
-bind = SUPER SHIFT, 4, movetoworkspace, 4
-bind = SUPER SHIFT, 5, movetoworkspace, 5
-bind = SUPER SHIFT, 6, movetoworkspace, 6
-bind = SUPER SHIFT, 7, movetoworkspace, 7
-bind = SUPER SHIFT, 8, movetoworkspace, 8
-bind = SUPER SHIFT, 9, movetoworkspace, 9
+### No audio
+
+```bash
+systemctl --user status pipewire wireplumber
+
+# Restart the audio stack
+systemctl --user restart pipewire wireplumber pipewire-pulse
+
+# Check devices
+pactl list sinks short
+```
+
+### Bluetooth not connecting
+
+```bash
+sudo systemctl start bluetooth
+bluetoothctl
+# In the bluetoothctl prompt:
+power on
+scan on
+# Wait for device to appear, then:
+pair XX:XX:XX:XX:XX:XX
+connect XX:XX:XX:XX:XX:XX
+```
+
+### Network not connecting after reboot
+
+```bash
+sudo systemctl status NetworkManager
+sudo systemctl restart NetworkManager
+nmcli device status
+nmcli connection up "YourNetworkName"
 ```
 
 ---
 
-# 19. Wallpaper and theme flow
+## Maintenance
 
-Put wallpapers in:
-
-```bash
-~/wallpaper
-```
-
-Use:
-
-```text
-SUPER + W
-```
-
-to open the wallpaper menu.
-
-Use:
-
-```text
-SUPER + SHIFT + W
-```
-
-to open the theme menu.
-
-The wallpaper script:
-
-1. Opens rofi.
-2. Sets the selected wallpaper with `awww`.
-3. Generates colors with `pywal`.
-4. Reloads Waybar.
-5. Saves the selected wallpaper as the current wallpaper.
-
----
-
-# 20. External Waybar source
-
-Confirmed Waybar source:
-
-```text
-https://github.com/elifouts/Dotfiles
-```
-
-Relevant folder:
-
-```text
-https://github.com/elifouts/Dotfiles/tree/main/.config/waybar
-```
-
-Sync Waybar assets/themes/scripts with:
+### Updating the system
 
 ```bash
-./scripts/sync-elifouts-waybar.sh
+sudo pacman -Syu              # system + official packages
+paru -Syu                    # includes AUR packages (librewolf, rofi-wayland etc.)
 ```
 
-Sync wallpapers with:
+The `nvidia.hook` will automatically regenerate initramfs whenever `nvidia-open` or the kernel updates. You don't need to do anything manually after updates.
+
+### Pulling config updates
 
 ```bash
-./scripts/sync-elifouts-wallpapers.sh
+cd ~/arch-setup
+git pull
+bash phase4-dotfiles/dots.sh  # re-deploy (symlinks update instantly, but new files need re-running)
+```
+
+### Re-running a phase
+
+Phase scripts are guarded against double-runs. To force re-run:
+```bash
+rm ~/.arch-setup-phases/phase4.done
+bash phase4-dotfiles/dots.sh
+```
+
+### Adding new packages
+
+Edit `phase2-packages/pkglist.txt`, then:
+```bash
+bash phase2-packages/packages.sh
+```
+
+Or install directly and add to pkglist for future installs:
+```bash
+sudo pacman -S some-package
+echo "some-package" >> phase2-packages/pkglist.txt
+git add phase2-packages/pkglist.txt
+git commit -m "add some-package"
 ```
 
 ---
 
-# 21. Updating later
+## Known Issues / Notes
 
-Update official packages:
-
-```bash
-sudo pacman -Syu
-```
-
-Update AUR packages:
-
-```bash
-paru -Syu
-```
-
-or:
-
-```bash
-yay -Syu
-```
-
----
-
-# 22. Saving future config changes
-
-After changing configs, copy them back into the repo:
-
-```bash
-cp -r ~/.config/hypr dotfiles/
-cp -r ~/.config/waybar dotfiles/
-cp -r ~/.config/rofi dotfiles/
-cp -r ~/.config/kitty dotfiles/
-cp -r ~/.config/alacritty dotfiles/
-cp -r ~/.config/yazi dotfiles/
-```
-
-Commit changes:
-
-```bash
-git add .
-git commit -m "Update Arch Hyprland setup"
-git push
-```
-
----
-
-# 23. Short install flow
-
-```text
-1. Download archlinux-x86_64.iso from https://archlinux.org/download/
-2. Put the ISO on a USB using Ventoy, Rufus, or Balena Etcher
-3. Boot the USB in UEFI mode
-4. Connect to internet
-5. Clone this repo:
-   git clone https://github.com/weihen9/arch-set-up-.git ~/arch-setup
-6. Run 00-preflight.sh
-7. Run 01-run-archinstall-guided.sh
-8. Install Arch using archinstall
-9. Copy repo into new Arch install
-10. Reboot into Arch
-11. Enable multilib
-12. Run one-shot-postinstall.sh
-13. Reboot
-14. Use Hyprland
-```
+- **Secure Boot**: keep it off. NVIDIA open modules are not signed by default.
+- **Wayland + Electron apps** (Discord, VS Code, etc.): may need `--ozone-platform=wayland` flag or env var `ELECTRON_OZONE_PLATFORM_HINT=wayland`
+- **Steam/Gaming**: install `steam` from multilib + `gamemode` + `mangohud` for performance monitoring
+- **LibreWolf auto-updates**: it doesn't. Run `paru -S librewolf-bin` periodically or add it to a cron/timer
+- **Laptop mode**: `brightnessctl` and `swayidle` are already installed. Configure `swayidle` in Hyprland config for auto-lock + screen off

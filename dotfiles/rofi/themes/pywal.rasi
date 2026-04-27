@@ -1,8 +1,0 @@
-@import "~/.cache/wal/colors-rofi-dark.rasi"
-* { font: "JetBrainsMono Nerd Font 12"; }
-window { width: 42%; border-radius: 18px; background-color: @background; border: 2px; border-color: @color9; }
-mainbox { padding: 18px; }
-inputbar { padding: 12px; border-radius: 12px; background-color: @color0; text-color: @foreground; }
-listview { margin: 12px 0 0 0; lines: 8; columns: 1; fixed-height: false; }
-element { padding: 10px; border-radius: 12px; text-color: @foreground; }
-element selected { background-color: @color9; text-color: @background; }

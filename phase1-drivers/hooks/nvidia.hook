@@ -1,0 +1,15 @@
+[Trigger]
+Operation=Install
+Operation=Upgrade
+Operation=Remove
+Type=Package
+Target=nvidia-open
+Target=nvidia-open-dkms
+Target=linux
+Target=linux-headers
+
+[Action]
+Description=Updating NVIDIA initramfs after driver or kernel change...
+Depends=mkinitcpio
+When=PostTransaction
+Exec=/usr/bin/mkinitcpio -P

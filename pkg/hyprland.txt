@@ -1,9 +1,0 @@
-hyprland
-xdg-desktop-portal-hyprland
-xdg-desktop-portal-gtk
-xorg-xwayland
-polkit-kde-agent
-qt5-wayland
-qt6-wayland
-hypridle
-hyprlock
