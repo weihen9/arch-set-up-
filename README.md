@@ -86,22 +86,14 @@ Since Windows is on a completely separate SSD, it won't interfere with Arch at a
 3. Windows will still be bootable — select it in BIOS boot menu when needed
 4. GRUB will not automatically detect Windows unless you install `os-prober` and re-run `grub-mkconfig` — that's optional
 
-### Partitioning Recommendation
+### Disk Setup
 
-For a clean UEFI Arch install on the Arch SSD:
+Use `archinstall`'s built-in disk management step — it handles wiping, partitioning, and formatting for you. When prompted:
 
-| Partition | Size | Type | Mount |
-|-----------|------|------|-------|
-| EFI | 512MB–1GB | EFI System | `/boot` |
-| Swap | 16GB (match your RAM) | Linux swap | swap |
-| Root | Remaining | Linux filesystem | `/` |
-
-Use `fdisk` or `cfdisk` to partition. Format as:
-```bash
-mkfs.fat -F32 /dev/sdXn      # EFI partition
-mkswap /dev/sdXn              # swap
-mkfs.ext4 /dev/sdXn          # root (or btrfs if you prefer snapshots)
-```
+- Select your **Arch SSD** as the target (double-check the drive label so you don't touch the Windows SSD)
+- Choose **wipe and partition** for a clean install
+- Use **ext4** (simple and solid) or **btrfs** (if you want snapshots)
+- Let archinstall handle the EFI, swap, and root partition sizes automatically
 
 ---
 
