@@ -53,10 +53,9 @@ pacman_install kitty
 # ── 5. Yazi file manager ──────────────────────────────────────────────────────
 log_step "Installing Yazi"
 pacman_install yazi
-# Yazi optional deps for full functionality
+# Yazi optional deps — official repos
 pacman_install \
     ffmpegthumbnailer \
-    unar \
     jq \
     poppler \
     fd \
@@ -64,6 +63,8 @@ pacman_install \
     fzf \
     zoxide \
     imagemagick
+# unarchiver provides the 'unar' command — official extra repo
+pacman_install unarchiver
 
 # ── 6. Browsers ───────────────────────────────────────────────────────────────
 log_step "Installing Firefox"
