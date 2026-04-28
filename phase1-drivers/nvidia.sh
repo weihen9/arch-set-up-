@@ -68,7 +68,26 @@ log_step "Regenerating initramfs"
 sudo mkinitcpio -P
 log_ok "initramfs regenerated."
 
-# ── 5. Set GRUB kernel parameters ────────────────────────────────────────────
+# ── 5. Ensure GRUB is installed, then set kernel parameters ─────────────────
+log_step "Checking GRUB installation"
+if ! command -v grub-mkconfig &>/dev/null; then
+    log_warn "GRUB not found — installing now"
+    pacman_install grub efibootmgr
+    log_step "Installing GRUB to EFI partition"
+    if mountpoint -q /boot/efi; then
+        EFI_DIR="/boot/efi"
+    elif mountpoint -q /boot; then
+        EFI_DIR="/boot"
+    else
+        die "Cannot find EFI mount point at /boot or /boot/efi.\nMount your EFI partition first: mount /dev/sdXn /boot\nthen re-run this script."
+    fi
+    sudo grub-install --target=x86_64-efi --efi-directory="$EFI_DIR" --bootloader-id=GRUB \
+        || die "grub-install failed. Check your EFI partition is mounted at $EFI_DIR."
+    log_ok "GRUB installed."
+else
+    log_info "GRUB already installed."
+fi
+
 log_step "Setting GRUB kernel parameters for NVIDIA + Wayland"
 GRUB_CONF="/etc/default/grub"
 

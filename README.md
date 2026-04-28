@@ -122,6 +122,8 @@ cd ~/arch-setup
 bash phase0-base/bootstrap.sh
 ```
 
+> **After every reboot**, your terminal starts in home. Always run `cd ~/arch-setup` before any phase script.
+
 **Then reboot.**
 
 > The reboot ensures your new sudo session, multilib, and mirrorlist are all active before the next phase.
@@ -142,7 +144,10 @@ bash phase0-base/bootstrap.sh
 
 **Why isolated**: If NVIDIA fails, nothing downstream works. Running this alone lets you debug it without touching anything else.
 
+> **GRUB note**: The script now automatically installs and configures GRUB if it isn't present. If `archinstall` didn't set up a bootloader, this is handled for you — no manual steps needed.
+
 ```bash
+cd ~/arch-setup
 bash phase1-drivers/nvidia.sh
 ```
 
@@ -168,6 +173,7 @@ The RTX 2070 Super is Turing architecture (RTX 20xx). As of driver version 590+,
 **Requires**: Phase 1 complete + `nvidia-smi` passing after reboot.
 
 ```bash
+cd ~/arch-setup
 bash phase2-packages/packages.sh
 ```
 
@@ -191,12 +197,15 @@ To add or remove packages: edit `phase2-packages/pkglist.txt` before running the
 **What it does**: installs Hyprland, Waybar, Rofi (Wayland), Kitty, Yazi, Firefox, LibreWolf, Dunst.
 
 ```bash
+cd ~/arch-setup
 bash phase3-desktop/desktop.sh
 ```
 
 ### Key decisions
 
 **Rofi**: installs `rofi-wayland` from AUR, NOT the official `rofi` package (which is X11-only). If you have `rofi` already installed, the script removes it first. Using the wrong rofi is the main cause of theming failures on Wayland.
+
+**`unarchiver`**: Yazi needs this for archive support. The command it provides is called `unar` but the package name is `unarchiver` — these are different things. The script installs the correct package name.
 
 **Waybar**: the script kills any running `waybar` process before install to prevent the double-instance bug. A second Waybar instance appears when it's launched both by Hyprland's `exec-once` and by the install script simultaneously.
 
@@ -213,6 +222,7 @@ bash phase3-desktop/desktop.sh
 4. Validates Waybar JSON config
 
 ```bash
+cd ~/arch-setup
 bash phase4-dotfiles/dots.sh
 ```
 
@@ -321,6 +331,50 @@ sudo grub-mkconfig -o /boot/grub/grub.cfg               # regenerate with Window
 ---
 
 ## Troubleshooting
+
+### "No such file or directory" when running a phase script
+
+You're not in the repo directory. After every reboot your terminal starts at home. Fix:
+```bash
+cd ~/arch-setup
+bash phaseX-.../script.sh
+```
+
+### Phase 1: "cp: cannot stat '/etc/default/grub': no such file or directory"
+
+GRUB wasn't installed by `archinstall`. The script now handles this automatically — but if you hit this on an older version of the script, fix it manually:
+```bash
+sudo pacman -S grub efibootmgr --noconfirm
+sudo grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
+sudo grub-mkconfig -o /boot/grub/grub.cfg
+
+# Then re-run phase 1
+rm ~/.arch-setup-phases/phase1.done
+cd ~/arch-setup && bash phase1-drivers/nvidia.sh
+```
+If `grub-install` fails, your EFI partition may not be mounted. Check with `lsblk` and mount it:
+```bash
+lsblk                              # find your EFI partition (usually ~512MB, type vfat)
+sudo mount /dev/sdXn /boot         # replace sdXn with your actual EFI partition
+```
+
+### Phase 3: "pacman failed to install" on Yazi optional deps
+
+The package name is `unarchiver` (not `unar` — that's just the command it provides). Install manually and re-run:
+```bash
+sudo pacman -S --needed ffmpegthumbnailer jq poppler fd ripgrep fzf zoxide imagemagick unarchiver --noconfirm
+rm ~/.arch-setup-phases/phase3.done
+cd ~/arch-setup && bash phase3-desktop/desktop.sh
+```
+
+### A phase script failed partway — can I re-run it?
+
+Yes. Remove the phase completion flag and re-run. The `--needed` flag means already-installed packages are skipped:
+```bash
+rm ~/.arch-setup-phases/phaseN.done   # replace N with the phase number
+cd ~/arch-setup
+bash phaseN-.../script.sh
+```
 
 ### NVIDIA: black screen after Phase 1 reboot
 
@@ -507,6 +561,7 @@ bash phase4-dotfiles/dots.sh
 
 Edit `phase2-packages/pkglist.txt`, then:
 ```bash
+cd ~/arch-setup
 bash phase2-packages/packages.sh
 ```
 
