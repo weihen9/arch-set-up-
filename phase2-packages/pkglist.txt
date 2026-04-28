@@ -93,7 +93,8 @@ swaylock              # Wayland lock screen
 swayidle              # Idle management (auto-lock, screen off)
 
 # ── Wallpaper ─────────────────────────────────────────────────────────────────
-swww                  # Animated wallpaper daemon for Wayland
+# awww is installed via paru in phase3-desktop/desktop.sh (AUR package)
+# swww is archived — awww is the renamed successor by the same developer
 
 # ── Development tools ─────────────────────────────────────────────────────────
 git                   # Version control

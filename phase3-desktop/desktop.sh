@@ -72,11 +72,18 @@ pacman_install firefox
 log_step "Installing LibreWolf (AUR)"
 paru_install librewolf-bin
 
-# ── 7. Notification daemon ────────────────────────────────────────────────────
+# ── 7. Wallpaper daemon (awww) ────────────────────────────────────────────────
+# awww is the renamed successor to swww (archived Oct 2025) by the same
+# developer. Same syntax, just awww/awww-daemon instead of swww/swww-daemon.
+# AUR only — not in official Arch repos.
+log_step "Installing awww wallpaper daemon (AUR)"
+paru_install awww
+
+# ── 8. Notification daemon ────────────────────────────────────────────────────
 log_step "Installing Dunst (notification daemon)"
 pacman_install dunst
 
-# ── 8. App launcher extras ────────────────────────────────────────────────────
+# ── 9. App launcher extras ────────────────────────────────────────────────────
 log_step "Installing Rofi themes and emoji picker"
 paru_install rofi-emoji || log_warn "rofi-emoji optional — skipping if failed"
 

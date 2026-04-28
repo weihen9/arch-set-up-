@@ -96,7 +96,7 @@ monitor=,preferred,auto,1
 # Startup
 exec-once = waybar
 exec-once = dunst
-exec-once = swww-daemon
+exec-once = awww-daemon
 exec-once = nm-applet --indicator
 exec-once = /usr/lib/polkit-kde-authentication-agent-1
 

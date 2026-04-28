@@ -173,7 +173,7 @@ Notable packages and why they're included:
 - `xdg-desktop-portal-hyprland` — enables screensharing, file pickers in Hyprland
 - `wl-clipboard` — clipboard for Wayland (`wl-copy` / `wl-paste`)
 - `grim` + `slurp` — screenshot tools for Wayland
-- `swww` — animated wallpaper daemon
+- `awww` — animated wallpaper daemon (renamed from `swww` in Oct 2025, same developer, same syntax — installed via AUR in phase3)
 - `brightnessctl` — screen brightness control (useful for laptops)
 - `udiskie` — auto-mounts USB drives
 
