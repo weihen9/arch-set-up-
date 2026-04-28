@@ -51,17 +51,18 @@ arch-setup/
 
 ```
 1.  Install Arch (see Pre-Install below)
-2.  First login → git clone this repo
-3.  bash phase0-base/bootstrap.sh
-4.  REBOOT
-5.  bash phase1-drivers/nvidia.sh
-6.  REBOOT → verify: nvidia-smi
-7.  bash phase2-packages/packages.sh
-8.  bash phase3-desktop/desktop.sh
-9.  bash phase4-dotfiles/dots.sh
-10. bash phase5-tests/pre-reboot.sh   ← all must pass
-11. REBOOT
-12. bash phase5-tests/post-reboot.sh  ← all must pass
+2.  First login → pacman -Sy git base-devel --noconfirm
+3.  git clone https://github.com/weihen9/arch-set-up-.git ~/arch-setup && cd ~/arch-setup
+4.  bash phase0-base/bootstrap.sh
+5.  REBOOT
+6.  bash phase1-drivers/nvidia.sh
+7.  REBOOT → verify: nvidia-smi
+8.  bash phase2-packages/packages.sh
+9.  bash phase3-desktop/desktop.sh
+10. bash phase4-dotfiles/dots.sh
+11. bash phase5-tests/pre-reboot.sh   ← all must pass
+12. REBOOT
+13. bash phase5-tests/post-reboot.sh  ← all must pass
 ```
 
 ---
@@ -102,6 +103,18 @@ Use `archinstall`'s built-in disk management step — it handles wiping, partiti
 **What it does**: updates the system, installs core tools, enables multilib, sets up fastest mirrors, installs `paru` AUR helper.
 
 **Run after**: first login to a fresh Arch install (no desktop yet, just a terminal).
+
+### Step 1 — Install the minimum to get the repo (run manually)
+
+A fresh Arch install only comes with `bash` and `pacman`. You need `git` and `base-devel` before you can clone anything or run any script. Run this one line first:
+
+```bash
+pacman -Sy git base-devel --noconfirm
+```
+
+> No `sudo` yet — you are root on a fresh install. If you already created a non-root user and see a permission error, prefix with `sudo`.
+
+### Step 2 — Clone the repo and run bootstrap
 
 ```bash
 git clone https://github.com/weihen9/arch-set-up-.git ~/arch-setup
