@@ -1,0 +1,107 @@
+#!/bin/bash
+# =============================================================================
+# Phase 3 — Desktop Environment
+# Installs Hyprland (compositor), Waybar, Rofi, Kitty, Yazi,
+# Firefox, and LibreWolf. Order matters — compositor first.
+# "awww" = Hyprland in this setup. If you meant a different compositor,
+# swap hyprland for it here and in phase4 configs.
+# =============================================================================
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../scripts/helpers.sh"
+
+# ── Guards ────────────────────────────────────────────────────────────────────
+phase_check 0 "Bootstrap"
+phase_check 1 "GPU Drivers"
+phase_check 2 "Core Packages"
+
+if phase_already_done 3; then
+    log_warn "Phase 3 already completed. Skipping."
+    exit 0
+fi
+
+need_cmd yay
+
+log_step "Phase 3: Desktop Environment"
+log_info "Installing: Hyprland, Waybar, Rofi (Wayland), Kitty, Yazi, Firefox, LibreWolf"
+confirm "Ready?" || exit 0
+
+# ── 1. Hyprland (compositor / 'awww') ────────────────────────────────────────
+# hyprpaper intentionally excluded — awww (installed below) is the wallpaper
+# daemon in this setup, hyprpaper would just be a redundant second one.
+log_step "Installing Hyprland"
+pacman_install hyprland hypridle hyprlock hyprutils
+
+# ── 2. Waybar ─────────────────────────────────────────────────────────────────
+log_step "Installing Waybar"
+# Kill any existing waybar instances to prevent duplicates
+pkill waybar 2>/dev/null || true
+pacman_install waybar
+
+# ── 3. Rofi (Wayland build) ───────────────────────────────────────────────────
+log_step "Installing Rofi (Wayland)"
+# rofi-wayland from AUR — NOT the official 'rofi' package which is X11 only
+# This is critical: using the wrong rofi causes theming and rendering issues
+if pacman -Q rofi &>/dev/null; then
+    log_warn "X11 rofi is installed. Removing it and replacing with rofi-wayland..."
+    sudo pacman -Rns rofi --noconfirm || true
+fi
+yay_install rofi-wayland
+
+# ── 4. Kitty terminal ─────────────────────────────────────────────────────────
+log_step "Installing Kitty"
+pacman_install kitty
+
+# ── 5. Yazi file manager ──────────────────────────────────────────────────────
+# No GUI file manager (e.g. Thunar) installed alongside — Yazi is the only
+# file manager in this setup, keeping the app list free of overlap.
+log_step "Installing Yazi"
+pacman_install yazi
+# Yazi optional deps — official repos
+pacman_install \
+    ffmpegthumbnailer \
+    jq \
+    poppler \
+    fd \
+    ripgrep \
+    fzf \
+    zoxide \
+    imagemagick
+# unarchiver provides the 'unar' command — official extra repo
+pacman_install unarchiver
+
+# ── 6. Browsers ───────────────────────────────────────────────────────────────
+log_step "Installing Firefox"
+pacman_install firefox
+
+log_step "Installing LibreWolf (AUR)"
+yay_install librewolf-bin
+
+# ── 7. Wallpaper daemon (awww) ────────────────────────────────────────────────
+# awww is the renamed successor to swww (archived Oct 2025) by the same
+# developer. Same syntax, just awww/awww-daemon instead of swww/swww-daemon.
+# AUR only — not in official Arch repos.
+log_step "Installing awww wallpaper daemon (AUR)"
+yay_install awww
+
+# ── 8. Notification daemons ───────────────────────────────────────────────────
+# Both Dunst and swaync are installed intentionally: swaync provides the
+# notification-center UI Waybar's notification button opens, and its theming
+# is tied into the wallpaper.sh pywal reload script. If you decide you only
+# want one, this is the line to trim — see README theming notes.
+log_step "Installing Dunst + swaync (notification daemons)"
+pacman_install dunst
+yay_install swaync
+
+# ── 9. App launcher extras ────────────────────────────────────────────────────
+log_step "Installing Rofi themes and emoji picker"
+yay_install rofi-emoji || log_warn "rofi-emoji optional — skipping if failed"
+
+# ── 10. Theming — pywal ───────────────────────────────────────────────────────
+log_step "Installing pywal (system-wide dynamic theming)"
+pacman_install python-pywal
+
+# ── Done ──────────────────────────────────────────────────────────────────────
+phase_done 3
+echo -e "\n${GREEN}${BOLD}Phase 3 complete.${RESET}"
+echo -e "Next: ${BOLD}phase4-dotfiles/dots.sh${RESET}"
